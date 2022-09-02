@@ -1,8 +1,8 @@
 import math
 
+from js import document
 from matplotlib.backend_bases import FigureCanvasBase, NavigationToolbar2, TimerBase
 
-from js import document
 from pyodide.ffi.wrappers import (
     add_event_listener,
     clear_interval,
