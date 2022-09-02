@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=42", "setuptools_scm[toml]>=6.2"]
+
+build-backend = "setuptools.build_meta"
+
+# Evable versioning via setuptools_scm
+[tool.setuptools_scm]
+
+[tool.pycln]
+all = true
+
+[tool.isort]
+profile = "black"
+known_first_party = [
+  "pyodide",
+  "pyodide_js",
+  "micropip",
+  "pyodide_build",
+  "_pyodide",
+]
