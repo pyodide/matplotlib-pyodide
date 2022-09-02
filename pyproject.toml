@@ -15,8 +15,6 @@ known_first_party = [
   "pyodide",
   "pyodide_js",
   "micropip",
-  "pyodide_build",
-  "_pyodide",
 ]
 
 [tool.mypy]
