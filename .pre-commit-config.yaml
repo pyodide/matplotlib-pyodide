@@ -50,12 +50,8 @@ repos:
       - id: mypy
         args: []
         additional_dependencies: &mypy-deps
-          - packaging
-          - types-docutils
-          - types-pyyaml
-          - types-setuptools
-          - numpy
           - pytest
+
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.1.0"
