@@ -1,4 +1,4 @@
-#
+# matplotlib-pyodide
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/matplotlib-pyodide.svg)](https://pypi.org/project/matplotlib-pyodide/)
 ![GHA](https://github.com/pyodide/matplotlib-pyodide/actions/workflows/main.yml/badge.svg)
@@ -9,7 +9,7 @@ HTML5 backends for Matplotlib compatible with Pyodide
 
 This package includes two matplotlib backends,
 
- - the `wasm_backend` which from allows rendering Agg buffer (as static images) into an HTML canvas
+ - the `wasm_backend` which from allows rendering the Agg buffer as static images into an HTML canvas
  - an interactive HTML5 canvas backend `html5_canvas_backend` described in
    [this blog post](https://blog.pyodide.org/posts/canvas-renderer-matplotlib-in-pyodide/)
 
