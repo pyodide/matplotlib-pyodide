@@ -19,7 +19,8 @@ from js import ImageData, document
 from matplotlib import interactive
 from matplotlib.backend_bases import FigureManagerBase, _Backend
 from matplotlib.backends import backend_agg
-from matplotlib.backends.browser_backend import FigureCanvasWasm, NavigationToolbar2Wasm
+
+from matplotlib_pyodide.browser_backend import FigureCanvasWasm, NavigationToolbar2Wasm
 
 interactive(True)
 

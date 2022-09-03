@@ -10,7 +10,6 @@ from matplotlib.backend_bases import (
     RendererBase,
     _Backend,
 )
-from matplotlib.backends.browser_backend import FigureCanvasWasm, NavigationToolbar2Wasm
 from matplotlib.cbook import maxdict
 from matplotlib.colors import colorConverter, rgb2hex
 from matplotlib.font_manager import findfont
@@ -20,6 +19,8 @@ from matplotlib.path import Path
 from matplotlib.transforms import Affine2D
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
+
+from matplotlib_pyodide.browser_backend import FigureCanvasWasm, NavigationToolbar2Wasm
 
 try:
     from js import FontFace, ImageData, document
