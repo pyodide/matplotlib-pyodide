@@ -24,10 +24,10 @@ from matplotlib_pyodide.browser_backend import FigureCanvasWasm, NavigationToolb
 
 try:
     from js import FontFace, ImageData, document
-except ImportError:
+except ImportError as err:
     raise ImportError(
         "html5_canvas_backend is only supported in the browser in the main thread"
-    )
+    ) from err
 from pyodide.ffi import create_proxy
 
 _capstyle_d = {"projecting": "square", "butt": "butt", "round": "round"}
