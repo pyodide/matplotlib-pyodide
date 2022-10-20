@@ -90,10 +90,6 @@ class FigureCanvasWasm(FigureCanvasBase):
         )
         return DEVICE_PIXEL_RATIO / backing_store
 
-    def create_root_element(self):
-        # Designed to be overridden by subclasses
-        return document.createElement("div")
-
     def show(self):
         # If we've already shown this canvas elsewhere, don't create a new one,
         # just reuse it and scroll to the existing one.
@@ -118,7 +114,7 @@ class FigureCanvasWasm(FigureCanvasBase):
         width, height = self.get_width_height()
         width *= self._ratio
         height *= self._ratio
-        div = self.create_root_element()
+        div = self._create_root_element()
         add_event_listener(div, "contextmenu", ignore)
         div.setAttribute(
             "style",
@@ -314,6 +310,12 @@ class FigureCanvasWasm(FigureCanvasBase):
         221: "]",
         222: "'",
     }
+
+    def _create_root_element(self):
+        div = document.createElement('div')
+        mpl_target = getattr(document, 'pyodideMplTarget', document.body)
+        mpl_target.appendChild(div)
+        return div
 
     def _convert_key_event(self, event):
         code = int(event.which)

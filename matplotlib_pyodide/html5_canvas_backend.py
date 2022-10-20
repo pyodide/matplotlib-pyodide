@@ -44,11 +44,6 @@ class FigureCanvasHTMLCanvas(FigureCanvasWasm):
     def __init__(self, *args, **kwargs):
         FigureCanvasWasm.__init__(self, *args, **kwargs)
 
-    def create_root_element(self):
-        root_element = document.createElement("div")
-        document.body.appendChild(root_element)
-        return root_element
-
     def draw(self):
         # Render the figure using custom renderer
         self._idle_scheduled = True
