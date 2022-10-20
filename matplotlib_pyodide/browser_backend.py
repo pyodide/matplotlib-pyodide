@@ -312,8 +312,8 @@ class FigureCanvasWasm(FigureCanvasBase):
     }
 
     def _create_root_element(self):
-        div = document.createElement('div')
-        mpl_target = getattr(document, 'pyodideMplTarget', document.body)
+        div = document.createElement("div")
+        mpl_target = getattr(document, "pyodideMplTarget", document.body)
         mpl_target.appendChild(div)
         return div
 

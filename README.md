@@ -32,8 +32,8 @@ To change the backend in matplotlib,
    matplotlib.use("module://matplotlib_pyodide.html5_canvas_backend")
    ```
 
-By default, matplotlib figures will be rendered inside a div that's appended to the end of `document.body`. 
-You can override this behavior by setting `document.pyodideMplTarget` to an HTML element. If you had an HTML 
+By default, matplotlib figures will be rendered inside a div that's appended to the end of `document.body`.
+You can override this behavior by setting `document.pyodideMplTarget` to an HTML element. If you had an HTML
 element with id "target", you could configure the backend to render visualizations inside it with this code:
 
 ```py
