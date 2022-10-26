@@ -3,6 +3,12 @@ requires = ["setuptools>=42", "setuptools_scm[toml]>=6.2"]
 
 build-backend = "setuptools.build_meta"
 
+[project.optional-dependencies]
+test = [
+  "pytest-pyodide==0.23.1",
+  "pytest-cov"
+]
+
 # Evable versioning via setuptools_scm
 [tool.setuptools_scm]
 
