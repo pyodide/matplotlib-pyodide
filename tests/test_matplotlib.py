@@ -19,6 +19,47 @@ def matplotlib_test_decorator(f):
     return reduce(lambda x, g: g(x), DECORATORS, f)
 
 
+@pytest.fixture(scope="module")
+def wheel_path(tmp_path_factory):
+    # Build a micropip wheel for testing
+    import build
+    from build.env import IsolatedEnvBuilder
+
+    output_dir = tmp_path_factory.mktemp("wheel")
+
+    with IsolatedEnvBuilder() as env:
+        builder = build.ProjectBuilder(Path(__file__).parent.parent)
+        builder.python_executable = env.executable
+        builder.scripts_dir = env.scripts_dir
+        env.install(builder.build_system_requires)
+        builder.build("wheel", output_directory=output_dir)
+
+    yield output_dir
+
+
+@pytest.fixture
+def selenium_standalone_matplotlib(selenium_standalone, wheel_path):
+    wheel_dir = Path(wheel_path)
+    wheel_files = list(wheel_dir.glob("*.whl"))
+
+    if not wheel_files:
+        pytest.exit("No wheel files found in wheel/ directory")
+
+    wheel_file = wheel_files[0]
+    with spawn_web_server(wheel_dir) as server:
+        server_hostname, server_port, _ = server
+        base_url = f"http://{server_hostname}:{server_port}/"
+        selenium_standalone.run_js(
+            f"""
+            await pyodide.loadPackage("{base_url + wheel_file.name}");
+            await pyodide.loadPackage(["matplotlib"]);
+            pyodide.runPython("import matplotlib");
+            """
+        )
+
+    yield selenium_standalone
+
+
 def save_canvas_data(selenium, output_path):
     canvas_data = selenium.run(
         """
@@ -51,7 +92,7 @@ def patch_font_loading_and_dpi(selenium, handle, target_font=""):
 
         if not target_font or target_font == fontface.family:
             try:
-                handle["font-loaded"][0] = True
+                handle.font_loaded = True
             except Exception as e:
                 raise ValueError("unable to resolve") from e
 
@@ -63,27 +104,28 @@ def compare_func_handle(selenium):
     def prepare(selenium):
         from pytest_pyodide.decorator import PyodideHandle
 
-        font_loaded = [False]
+        class Handle:
+            def __init__(self):
+                self.font_loaded = False
 
-        async def compare(ref):
-            import asyncio
-            import io
+            async def compare(self, ref):
+                import asyncio
+                import io
 
-            import matplotlib.pyplot as plt
-            import numpy as np
-            from PIL import Image
+                import matplotlib.pyplot as plt
+                import numpy as np
+                from PIL import Image
 
-            nonlocal font_loaded
-            while not font_loaded[0]:  # wait until font is loading
-                await asyncio.sleep(0.2)
+                while not self.font_loaded:  # wait until font is loading
+                    await asyncio.sleep(0.2)
 
-            canvas_data = plt.gcf().canvas.get_pixel_data()
-            ref_data = np.asarray(Image.open(io.BytesIO(ref)))
+                canvas_data = plt.gcf().canvas.get_pixel_data()
+                ref_data = np.asarray(Image.open(io.BytesIO(ref)))
 
-            deviation = np.mean(np.abs(canvas_data - ref_data))
-            assert float(deviation) == 0.0
+                deviation = np.mean(np.abs(canvas_data - ref_data))
+                assert float(deviation) == 0.0
 
-        return PyodideHandle({"compare": compare, "font-loaded": font_loaded})
+        return PyodideHandle(Handle())
 
     handle = prepare(selenium)
     return handle
@@ -160,8 +202,8 @@ def test_font_manager(selenium):
 
 
 @matplotlib_test_decorator
-def test_rendering(selenium_standalone):
-    selenium = selenium_standalone
+def test_rendering(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -179,7 +221,7 @@ def test_rendering(selenium_standalone):
         plt.grid(True)
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (REFERENCE_IMAGES_PATH / f"canvas-{selenium.browser}.png").read_bytes()
     handle = compare_func_handle(selenium)
@@ -188,8 +230,8 @@ def test_rendering(selenium_standalone):
 
 
 @matplotlib_test_decorator
-def test_draw_image(selenium_standalone):
-    selenium = selenium_standalone
+def test_draw_image(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -218,7 +260,7 @@ def test_draw_image(selenium_standalone):
         )
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (REFERENCE_IMAGES_PATH / f"canvas-image-{selenium.browser}.png").read_bytes()
     handle = compare_func_handle(selenium)
@@ -227,8 +269,8 @@ def test_draw_image(selenium_standalone):
 
 
 @matplotlib_test_decorator
-def test_draw_image_affine_transform(selenium_standalone):
-    selenium = selenium_standalone
+def test_draw_image_affine_transform(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -294,7 +336,7 @@ def test_draw_image_affine_transform(selenium_standalone):
 
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (
         REFERENCE_IMAGES_PATH / f"canvas-image-affine-{selenium.browser}.png"
@@ -305,8 +347,8 @@ def test_draw_image_affine_transform(selenium_standalone):
 
 
 @matplotlib_test_decorator
-def test_draw_text_rotated(selenium_standalone):
-    selenium = selenium_standalone
+def test_draw_text_rotated(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -346,7 +388,7 @@ def test_draw_text_rotated(selenium_standalone):
 
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (
         REFERENCE_IMAGES_PATH / f"canvas-text-rotated-{selenium.browser}.png"
@@ -360,8 +402,8 @@ def test_draw_text_rotated(selenium_standalone):
 @pytest.mark.xfail(
     reason="TODO: pytest_pyodide.pyodide.JsException: InvalidStateError: An attempt was made to use an object that is not, or is no longer, usable"
 )
-def test_draw_math_text(selenium_standalone):
-    selenium = selenium_standalone
+def test_draw_math_text(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -478,7 +520,7 @@ def test_draw_math_text(selenium_standalone):
 
         doall()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (
         REFERENCE_IMAGES_PATH / f"canvas-math-text-{selenium.browser}.png"
@@ -489,8 +531,8 @@ def test_draw_math_text(selenium_standalone):
 
 
 @matplotlib_test_decorator
-def test_custom_font_text(selenium_standalone):
-    selenium = selenium_standalone
+def test_custom_font_text(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -511,7 +553,7 @@ def test_custom_font_text(selenium_standalone):
         plt.grid(True)
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (
         REFERENCE_IMAGES_PATH / f"canvas-custom-font-text-{selenium.browser}.png"
@@ -522,8 +564,8 @@ def test_custom_font_text(selenium_standalone):
 
 
 @matplotlib_test_decorator
-def test_zoom_on_polar_plot(selenium_standalone):
-    selenium = selenium_standalone
+def test_zoom_on_polar_plot(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -552,7 +594,7 @@ def test_zoom_on_polar_plot(selenium_standalone):
         ax.set_rlim([0, 5])
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (
         REFERENCE_IMAGES_PATH / f"canvas-polar-zoom-{selenium.browser}.png"
@@ -563,8 +605,8 @@ def test_zoom_on_polar_plot(selenium_standalone):
 
 
 @matplotlib_test_decorator
-def test_transparency(selenium_standalone):
-    selenium = selenium_standalone
+def test_transparency(selenium_standalone_matplotlib):
+    selenium = selenium_standalone_matplotlib
 
     @run_in_pyodide(packages=["matplotlib"])
     def run(selenium, handle, ref):
@@ -590,7 +632,7 @@ def test_transparency(selenium_standalone):
 
         plt.show()
 
-        handle["compare"](ref)
+        handle.compare(ref)
 
     ref = (
         REFERENCE_IMAGES_PATH / f"canvas-transparency-{selenium.browser}.png"
