@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
     needs: download-pyodide
     runs-on: ${{ matrix.os }}
     env:
