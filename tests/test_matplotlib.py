@@ -1,9 +1,10 @@
 import base64
 import pathlib
 from functools import reduce
+from pathlib import Path
 
 import pytest
-from pytest_pyodide import run_in_pyodide
+from pytest_pyodide import run_in_pyodide, spawn_web_server
 
 REFERENCE_IMAGES_PATH = pathlib.Path(__file__).parent / "test_data"
 
