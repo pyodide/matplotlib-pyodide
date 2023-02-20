@@ -48,7 +48,7 @@ def selenium_standalone_matplotlib(selenium_standalone, wheel_path):
         base_url = f"http://{server_hostname}:{server_port}/"
         selenium_standalone.run_js(
             f"""
-            await pyodide.loadPackage("{base_url + wheel_file.name}");
+            await pyodide.loadPackage({base_url + wheel_file.name!r});
             await pyodide.loadPackage(["matplotlib"]);
             pyodide.runPython("import matplotlib");
             """
