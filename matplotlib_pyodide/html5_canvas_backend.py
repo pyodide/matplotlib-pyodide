@@ -86,7 +86,6 @@ class FigureCanvasHTMLCanvas(FigureCanvasWasm):
     def print_png(
         self, filename_or_obj, *args, metadata=None, pil_kwargs=None, **kwargs
     ):
-
         if metadata is None:
             metadata = {}
         if pil_kwargs is None:
