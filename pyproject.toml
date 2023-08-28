@@ -25,7 +25,7 @@ build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
 test = [
-  "pytest-pyodide==0.23.1",
+  "pytest-pyodide==0.52.2",
   "pytest-cov",
   "build",
 ]
