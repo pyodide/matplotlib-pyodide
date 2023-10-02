@@ -90,7 +90,7 @@ class FigureCanvasWasm(FigureCanvasBase):
         )
         return DEVICE_PIXEL_RATIO / backing_store
 
-    def show(self):
+    def show(self, *args, **kwargs):
         # If we've already shown this canvas elsewhere, don't create a new one,
         # just reuse it and scroll to the existing one.
         existing = self.get_element("")

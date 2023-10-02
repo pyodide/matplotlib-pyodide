@@ -108,7 +108,7 @@ class _BackendWasmCoreAgg(_Backend):
     FigureManager = FigureManagerAggWasm
 
     @staticmethod
-    def show():
+    def show(*args, **kwargs):
         from matplotlib import pyplot as plt
 
-        plt.gcf().canvas.show()
+        plt.gcf().canvas.show(*args, **kwargs)
