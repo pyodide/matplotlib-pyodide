@@ -27,7 +27,7 @@ build-backend = "setuptools.build_meta"
 test = [
   "pytest-pyodide==0.52.2",
   "pytest-cov",
-  "build",
+  "build==0.10",
 ]
 
 
