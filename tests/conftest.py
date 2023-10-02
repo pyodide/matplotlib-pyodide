@@ -20,11 +20,11 @@ def matplotlib_test_decorator(f):
 def wheel_path(tmp_path_factory):
     # Build a micropip wheel for testing
     import build
-    from build.env import IsolatedEnvBuilder
+    from build.env import IsolatedEnv
 
     output_dir = tmp_path_factory.mktemp("wheel")
 
-    with IsolatedEnvBuilder() as env:
+    with IsolatedEnv() as env:
         builder = build.ProjectBuilder(Path(__file__).parent.parent)
         builder.python_executable = env.executable
         builder.scripts_dir = env.scripts_dir
