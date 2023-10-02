@@ -14,6 +14,17 @@ def test_plot(selenium_standalone_matplotlib):
 
 @matplotlib_test_decorator
 @run_in_pyodide(packages=["matplotlib"])
+def test_plot_with_pause(selenium_standalone_matplotlib):
+    from matplotlib import pyplot as plt
+
+    plt.figure()
+    plt.plot([1, 2, 3])
+    plt.pause(0.001)
+    plt.show()
+
+
+@matplotlib_test_decorator
+@run_in_pyodide(packages=["matplotlib"])
 def test_svg(selenium_standalone_matplotlib):
     import io
 
