@@ -92,8 +92,8 @@ class FigureManagerAggWasm(FigureManagerBase):
         self.set_window_title("Figure %d" % num)
         self.toolbar = NavigationToolbar2AggWasm(canvas)
 
-    def show(self):
-        self.canvas.show()
+    def show(self, *args, **kwargs):
+        self.canvas.show(*args, **kwargs)
 
     def resize(self, w, h):
         pass
@@ -108,7 +108,7 @@ class _BackendWasmCoreAgg(_Backend):
     FigureManager = FigureManagerAggWasm
 
     @staticmethod
-    def show():
+    def show(*args, **kwargs):
         from matplotlib import pyplot as plt
 
-        plt.gcf().canvas.show()
+        plt.gcf().canvas.show(*args, **kwargs)

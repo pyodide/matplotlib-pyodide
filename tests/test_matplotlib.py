@@ -1,3 +1,4 @@
+import pytest
 from conftest import matplotlib_test_decorator
 from pytest_pyodide import run_in_pyodide
 
@@ -9,6 +10,18 @@ def test_plot(selenium_standalone_matplotlib):
 
     plt.figure()
     plt.plot([1, 2, 3])
+    plt.show()
+
+
+@pytest.mark.skip(reason="wrong version of matplotlib_pyodide in tests")
+@matplotlib_test_decorator
+@run_in_pyodide(packages=["matplotlib"])
+def test_plot_with_pause(selenium_standalone_matplotlib):
+    from matplotlib import pyplot as plt
+
+    plt.figure()
+    plt.plot([1, 2, 3])
+    plt.pause(0.001)
     plt.show()
 
 
