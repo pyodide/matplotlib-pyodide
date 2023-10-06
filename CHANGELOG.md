@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.1] - 2023-10-04
+## [0.2.1] - 2023-10-06
 ### Fixed
  - Improved support for matplotlib canvas methods
    ([#42](https://github.com/pyodide/matplotlib-pyodide/pull/42))
