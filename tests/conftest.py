@@ -25,9 +25,10 @@ def wheel_path(tmp_path_factory):
     output_dir = tmp_path_factory.mktemp("wheel")
 
     with DefaultIsolatedEnv() as env:
-        builder = build.ProjectBuilder(Path(__file__).parent.parent)
-        builder.python_executable = env.executable
-        builder.scripts_dir = env.scripts_dir
+        builder = build.ProjectBuilder(
+            srcdir=Path(__file__).parent.parent,
+            python_executable=env.python_executable,
+        )
         env.install(builder.build_system_requires)
         builder.build("wheel", output_directory=output_dir)
 
