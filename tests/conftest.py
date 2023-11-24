@@ -26,7 +26,7 @@ def wheel_path(tmp_path_factory):
 
     with DefaultIsolatedEnv() as env:
         builder = build.ProjectBuilder(
-            srcdir=Path(__file__).parent.parent,
+            source_dir=Path(__file__).parent.parent,
             python_executable=env.python_executable,
         )
         env.install(builder.build_system_requires)
