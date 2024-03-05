@@ -189,11 +189,11 @@ class FigureCanvasWasm(FigureCanvasBase):
         div.appendChild(bottom)
 
         self.draw()
-        
+
     def destroy(self, *args, **kwargs):
         div = document.getElementById(self._id)
         parentElement = div.parentNode
-        if parentElement: 
+        if parentElement:
             parentElement.removeChild(div)
         div.removeChild(div.firstChild)
 
