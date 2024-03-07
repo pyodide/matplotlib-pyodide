@@ -83,3 +83,40 @@ def test_font_manager(selenium_standalone_matplotlib):
             fontlist[list].sort(key=lambda x: x["fname"])
 
     assert fontlist_built == fontlist_vendor
+
+
+@matplotlib_test_decorator
+@run_in_pyodide(packages=["matplotlib"])
+def test_destroy(selenium_standalone_matplotlib):
+    from matplotlib import pyplot as plt
+
+    plt.figure()
+    plt.plot([1, 2, 3])
+    plt.show()
+    plt.close()
+
+
+@matplotlib_test_decorator
+@run_in_pyodide(packages=["matplotlib"])
+def test_call_close_multi_times(selenium_standalone_matplotlib):
+    from matplotlib import pyplot as plt
+
+    plt.figure()
+    plt.plot([1, 2, 3])
+    plt.show()
+    plt.close()
+    plt.close()
+
+
+@matplotlib_test_decorator
+@run_in_pyodide(packages=["matplotlib"])
+def test_call_show_and_close_multi_times(selenium_standalone_matplotlib):
+    from matplotlib import pyplot as plt
+
+    plt.figure()
+    plt.plot([1, 2, 3])
+    plt.show()
+    plt.close()
+    plt.plot([1, 2, 3])
+    plt.show()
+    plt.close()

@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2024-03-04
+### Fixed
+ - Add FigureCanvasWasm.destroy() method so that user can call pyplot.close() method to delete previous divs
+   ([#55](https://github.com/pyodide/matplotlib-pyodide/pull/55))
+
 ## [0.2.1] - 2023-10-06
 ### Fixed
  - Improved support for matplotlib canvas methods

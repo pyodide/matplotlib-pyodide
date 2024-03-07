@@ -95,6 +95,9 @@ class FigureManagerAggWasm(FigureManagerBase):
     def show(self, *args, **kwargs):
         self.canvas.show(*args, **kwargs)
 
+    def destroy(self, *args, **kwargs):
+        self.canvas.destroy(*args, **kwargs)
+
     def resize(self, w, h):
         pass
 
@@ -112,3 +115,9 @@ class _BackendWasmCoreAgg(_Backend):
         from matplotlib import pyplot as plt
 
         plt.gcf().canvas.show(*args, **kwargs)
+
+    @staticmethod
+    def destroy(*args, **kwargs):
+        from matplotlib import pyplot as plt
+
+        plt.gcf().canvas.destroy(*args, **kwargs)
