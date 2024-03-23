@@ -1,6 +1,7 @@
 import base64
 import io
 import math
+from functools import lru_cache
 
 import numpy as np
 from matplotlib import __version__, interactive
@@ -10,7 +11,6 @@ from matplotlib.backend_bases import (
     RendererBase,
     _Backend,
 )
-from matplotlib.cbook import maxdict
 from matplotlib.colors import colorConverter, rgb2hex
 from matplotlib.font_manager import findfont
 from matplotlib.ft2font import LOAD_NO_HINTING, FT2Font
@@ -204,8 +204,8 @@ class RendererHTMLCanvas(RendererBase):
         self.ctx.width = self.width
         self.ctx.height = self.height
         self.dpi = dpi
-        self.fontd = maxdict(50)
         self.mathtext_parser = MathTextParser("bitmap")
+        self._get_font_helper = lru_cache(maxsize=50)(self._get_font_helper)
 
         # Keep the state of fontfaces that are loading
         self.fonts_loading = {}
@@ -309,22 +309,22 @@ class RendererHTMLCanvas(RendererBase):
         pixels_proxy.destroy()
         pixels_buf.release()
 
+    def _get_font_helper(self, prop):
+        """Cached font lookup
+
+        We wrap this in an lru-cache in the constructor.
+        """
+        fname = findfont(prop)
+        font = FT2Font(str(fname))
+        font_file_name = fname.rpartition("/")[-1]
+        return (font, font_file_name)
+
     def _get_font(self, prop):
-        key = hash(prop)
-        font_value = self.fontd.get(key)
-        if font_value is None:
-            fname = findfont(prop)
-            font_value = self.fontd.get(fname)
-            if font_value is None:
-                font = FT2Font(str(fname))
-                font_file_name = fname[fname.rfind("/") + 1 :]
-                font_value = font, font_file_name
-                self.fontd[fname] = font_value
-            self.fontd[key] = font_value
-        font, font_file_name = font_value
+        result = self._get_font_helper(prop)
+        font = result[0]
         font.clear()
         font.set_size(prop.get_size_in_points(), self.dpi)
-        return font, font_file_name
+        return result
 
     def get_text_width_height_descent(self, s, prop, ismath):
         w: float
