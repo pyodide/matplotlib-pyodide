@@ -1,7 +1,7 @@
 import base64
 import pathlib
 
-import pytest
+# import pytest
 from conftest import matplotlib_test_decorator
 from pytest_pyodide import run_in_pyodide
 

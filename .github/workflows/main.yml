@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: main-${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -22,10 +22,12 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         pyodide-version: [0.26.4]
-        test-config: [
-          # FIXME: timeouts on recent versions of Chrome, same as micropip
-          {runner: selenium, runtime: chrome, runtime-version: 125},
-        ]
+        test-config:
+          [
+            # FIXME: timeouts on recent versions of Chrome, same as micropip
+            { runner: selenium, runtime: chrome, runtime-version: 125 },
+            { runner: selenium, runtime: firefox, runtime-version: latest },
+          ]
 
     steps:
       - uses: actions/checkout@v4
