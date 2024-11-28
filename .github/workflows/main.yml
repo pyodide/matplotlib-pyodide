@@ -2,6 +2,9 @@ name: main
 
 on: [push, pull_request]
 
+env:
+  FORCE_COLOR: 3
+
 permissions:
   contents: read
 
