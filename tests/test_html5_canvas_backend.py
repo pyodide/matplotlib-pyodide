@@ -1,7 +1,6 @@
 import base64
 import pathlib
 
-# import pytest
 from conftest import matplotlib_test_decorator
 from pytest_pyodide import run_in_pyodide
 
@@ -277,9 +276,6 @@ def test_draw_text_rotated(selenium_standalone_matplotlib):
 
 
 @matplotlib_test_decorator
-@pytest.mark.xfail(
-    reason="TODO: pytest_pyodide.pyodide.JsException: InvalidStateError: An attempt was made to use an object that is not, or is no longer, usable"
-)
 def test_draw_math_text(selenium_standalone_matplotlib):
     selenium = selenium_standalone_matplotlib
 
