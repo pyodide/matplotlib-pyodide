@@ -5,13 +5,13 @@ authors = [
 ]
 description = "HTML5 backends for Matplotlib compatible with Pyodide"
 readme = "README.md"
-license = { file="LICENSE" }
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
 dynamic = ["version"]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+  "Operating System :: OS Independent",
 ]
 
 [build-system]
