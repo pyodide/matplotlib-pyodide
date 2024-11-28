@@ -5,8 +5,8 @@ authors = [
 ]
 description = "HTML5 backends for Matplotlib compatible with Pyodide"
 readme = "README.md"
-requires-python = ">=3.10"
 license = { file = "LICENSE" }
+requires-python = ">=3.12"
 dynamic = ["version"]
 classifiers = [
   "Programming Language :: Python :: 3",
@@ -15,7 +15,7 @@ classifiers = [
 ]
 
 [build-system]
-requires = ["setuptools>=42", "setuptools_scm[toml]>=6.2", "wheel"]
+requires = ["setuptools>=71", "setuptools_scm[toml]>=6.2"]
 
 build-backend = "setuptools.build_meta"
 
