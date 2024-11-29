@@ -5,17 +5,17 @@ authors = [
 ]
 description = "HTML5 backends for Matplotlib compatible with Pyodide"
 readme = "README.md"
-license = { file="LICENSE" }
-requires-python = ">=3.10"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
 dynamic = ["version"]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+  "Operating System :: OS Independent",
 ]
 
 [build-system]
-requires = ["setuptools>=42", "setuptools_scm[toml]>=6.2", "wheel"]
+requires = ["setuptools>=71", "setuptools_scm[toml]>=6.2"]
 
 build-backend = "setuptools.build_meta"
 
@@ -47,7 +47,7 @@ known_first_party = [
 ]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 show_error_codes = true
 warn_unreachable = true
 ignore_missing_imports = true

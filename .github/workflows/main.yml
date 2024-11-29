@@ -2,6 +2,9 @@ name: main
 
 on: [push, pull_request]
 
+env:
+  FORCE_COLOR: 3
+
 permissions:
   contents: read
 
@@ -18,24 +21,27 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        pyodide-version: [0.25.0]
+        pyodide-version: [0.26.4]
         test-config: [
-          {runner: selenium, runtime: chrome, runtime-version: latest},
+          # FIXME: timeouts on recent versions of Chrome, same as micropip
+          {runner: selenium, runtime: chrome, runtime-version: 125},
         ]
 
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
         with:
-          python-version: 3.11
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
 
       - uses: pyodide/pyodide-actions/download-pyodide@v1
         with:
           version: ${{ matrix.pyodide-version }}
           to: dist
 
-      - uses: pyodide/pyodide-actions/install-browser@v1
+      - uses: pyodide/pyodide-actions/install-browser@v2
         with:
           runner: ${{ matrix.test-config.runner }}
           browser: ${{ matrix.test-config.runtime }}
@@ -63,11 +69,11 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     environment: PyPi-deploy
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
       - name: Install requirements and build wheel
         shell: bash -l {0}
         run: |
