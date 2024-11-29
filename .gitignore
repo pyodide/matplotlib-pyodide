@@ -1,0 +1,3 @@
+# Build-related files
+/build
+/matplotlib_pyodide.egg-info
