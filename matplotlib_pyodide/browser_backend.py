@@ -180,8 +180,13 @@ class FigureCanvasWasm(FigureCanvasBase):
 
         # The bottom bar, with toolbar and message display
         bottom = document.createElement("div")
-        toolbar = self.toolbar.get_element()
-        bottom.appendChild(toolbar)
+
+        # Check if toolbar exists before trying to get its element
+        # c.f. https://github.com/pyodide/pyodide/pull/4510
+        if self.toolbar is not None:
+            toolbar = self.toolbar.get_element()
+            bottom.appendChild(toolbar)
+
         message = document.createElement("div")
         message.id = self._id + "message"
         message.setAttribute("style", "min-height: 1.5em")
