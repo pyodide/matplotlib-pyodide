@@ -1,3 +1,24 @@
+#
+# HTMl5 Canvas backend for Matplotlib to use when running Matplotlib in Pyodide, first
+# introduced via a Google Summer of Code 2019 project:
+# https://summerofcode.withgoogle.com/archive/2019/projects/4683094261497856
+#
+# Associated blog post:
+# https://blog.pyodide.org/posts/canvas-renderer-matplotlib-in-pyodide
+#
+# TODO: As of release 0.2.3, this backend is not yet fully functional following
+# an update from Matplotlib 3.5.2 to 3.8.4 in Pyodide in-tree, please refer to
+# https://github.com/pyodide/pyodide/pull/4510.
+#
+# This backend has been redirected to use the WASM backend in the meantime, which
+# is now fully functional. The source code for the HTML5 Canvas backend is still
+# available in this file, and shall be updated to work in a future release.
+#
+# Readers are advised to look at https://github.com/pyodide/matplotlib-pyodide/issues/64
+# and at https://github.com/pyodide/matplotlib-pyodide/pull/65 for information
+# around the status of this backend and on how to contribute to its restoration
+# for future releases. Thank you!
+
 import base64
 import io
 import math
