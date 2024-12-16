@@ -1,16 +1,40 @@
+#
+# HTMl5 Canvas backend for Matplotlib to use when running Matplotlib in Pyodide, first
+# introduced via a Google Summer of Code 2019 project:
+# https://summerofcode.withgoogle.com/archive/2019/projects/4683094261497856
+#
+# Associated blog post:
+# https://blog.pyodide.org/posts/canvas-renderer-matplotlib-in-pyodide
+#
+# TODO: As of release 0.2.3, this backend is not yet fully functional following
+# an update from Matplotlib 3.5.2 to 3.8.4 in Pyodide in-tree, please refer to
+# https://github.com/pyodide/pyodide/pull/4510.
+#
+# This backend has been redirected to use the WASM backend in the meantime, which
+# is now fully functional. The source code for the HTML5 Canvas backend is still
+# available in this file, and shall be updated to work in a future release.
+#
+# Readers are advised to look at https://github.com/pyodide/matplotlib-pyodide/issues/64
+# and at https://github.com/pyodide/matplotlib-pyodide/pull/65 for information
+# around the status of this backend and on how to contribute to its restoration
+# for future releases. Thank you!
+
 import base64
 import io
 import math
 from functools import lru_cache
 
+import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import __version__, interactive
+from matplotlib import __version__, figure, interactive
+from matplotlib._enums import CapStyle
 from matplotlib.backend_bases import (
     FigureManagerBase,
     GraphicsContextBase,
     RendererBase,
     _Backend,
 )
+from matplotlib.backends import backend_agg
 from matplotlib.colors import colorConverter, rgb2hex
 from matplotlib.font_manager import findfont
 from matplotlib.ft2font import LOAD_NO_HINTING, FT2Font
@@ -20,7 +44,9 @@ from matplotlib.transforms import Affine2D
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
+# Redirect to the WASM backend
 from matplotlib_pyodide.browser_backend import FigureCanvasWasm, NavigationToolbar2Wasm
+from matplotlib_pyodide.wasm_backend import FigureCanvasAggWasm, FigureManagerAggWasm
 
 try:
     from js import FontFace, ImageData, document
@@ -28,6 +54,7 @@ except ImportError as err:
     raise ImportError(
         "html5_canvas_backend is only supported in the browser in the main thread"
     ) from err
+
 from pyodide.ffi import create_proxy
 
 _capstyle_d = {"projecting": "square", "butt": "butt", "round": "round"}
@@ -144,11 +171,30 @@ class GraphicsContextHTMLCanvas(GraphicsContextBase):
         self.renderer.ctx.restore()
 
     def set_capstyle(self, cs):
+        """
+        Set the cap style for lines in the graphics context.
+
+        Parameters
+        ----------
+        cs : CapStyle or str
+            The cap style to use. Can be a CapStyle enum value or a string
+            that can be converted to a CapStyle.
+        """
+        if isinstance(cs, str):
+            cs = CapStyle(cs)
+
+        # Convert the JoinStyle enum to its name if needed
+        if hasattr(cs, "name"):
+            cs = cs.name.lower()
+
         if cs in ["butt", "round", "projecting"]:
             self._capstyle = cs
             self.renderer.ctx.lineCap = _capstyle_d[cs]
         else:
             raise ValueError(f"Unrecognized cap style. Found {cs}")
+
+    def get_capstyle(self):
+        return self._capstyle
 
     def set_clip_rectangle(self, rectangle):
         self.renderer.ctx.save()
@@ -204,7 +250,11 @@ class RendererHTMLCanvas(RendererBase):
         self.ctx.width = self.width
         self.ctx.height = self.height
         self.dpi = dpi
-        self.mathtext_parser = MathTextParser("bitmap")
+
+        # Create path-based math text parser; as the bitmap parser
+        # was deprecated in 3.4 and removed after 3.5
+        self.mathtext_parser = MathTextParser("path")
+
         self._get_font_helper = lru_cache(maxsize=50)(self._get_font_helper)
 
         # Keep the state of fontfaces that are loading
@@ -240,14 +290,135 @@ class RendererHTMLCanvas(RendererBase):
 
         return CSS_color
 
+    def _math_to_rgba(self, s, prop, rgb):
+        """Convert math text to an RGBA array using path parser and figure"""
+        from io import BytesIO
+
+        # Get the text dimensions and generate a figure
+        # of the right rize.
+        width, height, depth, _, _ = self.mathtext_parser.parse(s, dpi=72, prop=prop)
+
+        fig = figure.Figure(figsize=(width / 72, height / 72))
+
+        # Add text to the figure
+        # Note: depth/height gives us the baseline position
+        fig.text(0, depth / height, s, fontproperties=prop, color=rgb)
+
+        backend_agg.FigureCanvasAgg(fig)
+
+        buf = BytesIO()  # render to PNG
+        fig.savefig(buf, dpi=self.dpi, format="png", transparent=True)
+        buf.seek(0)
+
+        rgba = plt.imread(buf)
+        return rgba, depth
+
+    def _draw_math_text_path(self, gc, x, y, s, prop, angle):
+        """Draw mathematical text using paths directly on the canvas.
+
+        This method renders math text by drawing the actual glyph paths
+        onto the canvas, rather than creating a temporary image.
+
+        Parameters
+        ----------
+        gc : GraphicsContextHTMLCanvas
+            The graphics context to use for drawing
+        x, y : float
+            The position of the text baseline in pixels
+        s : str
+            The text string to render
+        prop : FontProperties
+            The font properties to use for rendering
+        angle : float
+            The rotation angle in degrees
+        """
+        width, height, depth, glyphs, rects = self.mathtext_parser.parse(
+            s, dpi=self.dpi, prop=prop
+        )
+
+        self.ctx.save()
+
+        self.ctx.translate(x, self.height - y)
+        if angle != 0:
+            self.ctx.rotate(-math.radians(angle))
+
+        self.ctx.fillStyle = self._matplotlib_color_to_CSS(
+            gc.get_rgb(), gc.get_alpha(), gc.get_forced_alpha()
+        )
+
+        for font, fontsize, _, ox, oy in glyphs:
+            self.ctx.save()
+            self.ctx.translate(ox, -oy)
+
+            font.set_size(fontsize, self.dpi)
+            verts, codes = font.get_path()
+
+            verts = verts * fontsize / font.units_per_EM
+
+            path = Path(verts, codes)
+
+            transform = Affine2D().scale(1.0, -1.0)
+            self._path_helper(self.ctx, path, transform)
+            self.ctx.fill()
+
+            self.ctx.restore()
+
+        for x1, y1, x2, y2 in rects:
+            self.ctx.fillRect(x1, -y2, x2 - x1, y2 - y1)
+
+        self.ctx.restore()
+
+    def _draw_math_text(self, gc, x, y, s, prop, angle):
+        """Draw mathematical text using the most appropriate method.
+
+        This method tries direct path rendering first, and falls back to
+        the image-based approach if needed.
+
+        Parameters
+        ----------
+        gc : GraphicsContextHTMLCanvas
+            The graphics context to use for drawing
+        x, y : float
+            The position of the text baseline in pixels
+        s : str
+            The text string to render
+        prop : FontProperties
+            The font properties to use for rendering
+        angle : float
+            The rotation angle in degrees
+        """
+        try:
+            self._draw_math_text_path(gc, x, y, s, prop, angle)
+        except Exception as e:
+            # If path rendering fails, we fall back to image-based approach
+            print(f"Path rendering failed, falling back to image: {str(e)}")
+
+            rgba, depth = self._math_to_rgba(s, prop, gc.get_rgb())
+
+            angle = math.radians(angle)
+            if angle != 0:
+                self.ctx.save()
+                self.ctx.translate(x, y)
+                self.ctx.rotate(-angle)
+                self.ctx.translate(-x, -y)
+
+            self.draw_image(gc, x, -y - depth, np.flipud(rgba))
+
+            if angle != 0:
+                self.ctx.restore()
+
     def _set_style(self, gc, rgbFace=None):
         if rgbFace is not None:
             self.ctx.fillStyle = self._matplotlib_color_to_CSS(
                 rgbFace, gc.get_alpha(), gc.get_forced_alpha()
             )
 
-        if gc.get_capstyle():
-            self.ctx.lineCap = _capstyle_d[gc.get_capstyle()]
+        capstyle = gc.get_capstyle()
+        if capstyle:
+            # Get the string name if it's an enum
+            if hasattr(capstyle, "name"):
+                capstyle = capstyle.name.lower()
+            self.ctx.lineCap = _capstyle_d[capstyle]
 
         self.ctx.strokeStyle = self._matplotlib_color_to_CSS(
             gc.get_rgb(), gc.get_alpha(), gc.get_forced_alpha()
@@ -329,10 +500,13 @@ class RendererHTMLCanvas(RendererBase):
     def get_text_width_height_descent(self, s, prop, ismath):
         w: float
         h: float
+        d: float
         if ismath:
-            image, d = self.mathtext_parser.parse(s, self.dpi, prop)
-            image_arr = np.asarray(image)
-            h, w = image_arr.shape
+            # Use the path parser to get exact metrics
+            width, height, depth, _, _ = self.mathtext_parser.parse(
+                s, dpi=72, prop=prop
+            )
+            return width, height, depth
         else:
             font, _ = self._get_font(prop)
             font.set_text(s, 0.0, flags=LOAD_NO_HINTING)
@@ -340,31 +514,7 @@ class RendererHTMLCanvas(RendererBase):
             w /= 64.0
             h /= 64.0
             d = font.get_descent() / 64.0
-        return w, h, d
-
-    def _draw_math_text(self, gc, x, y, s, prop, angle):
-        rgba, descent = self.mathtext_parser.to_rgba(
-            s, gc.get_rgb(), self.dpi, prop.get_size_in_points()
-        )
-        height, width, _ = rgba.shape
-        angle = math.radians(angle)
-        if angle != 0:
-            self.ctx.save()
-            self.ctx.translate(x, y)
-            self.ctx.rotate(-angle)
-            self.ctx.translate(-x, -y)
-        self.draw_image(gc, x, -y - descent, np.flipud(rgba))
-        if angle != 0:
-            self.ctx.restore()
-
-    def load_font_into_web(self, loaded_face, font_url):
-        fontface = loaded_face.result()
-        document.fonts.add(fontface)
-        self.fonts_loading.pop(font_url, None)
-
-        # Redraw figure after font has loaded
-        self.fig.draw()
-        return fontface
+            return w, h, d
 
     def draw_text(self, gc, x, y, s, prop, angle, ismath=False, mtext=None):
         if ismath:
@@ -421,6 +571,15 @@ class RendererHTMLCanvas(RendererBase):
         if angle != 0:
             self.ctx.restore()
 
+    def load_font_into_web(self, loaded_face, font_url):
+        fontface = loaded_face.result()
+        document.fonts.add(fontface)
+        self.fonts_loading.pop(font_url, None)
+
+        # Redraw figure after font has loaded
+        self.fig.draw()
+        return fontface
+
 
 class FigureManagerHTMLCanvas(FigureManagerBase):
     def __init__(self, canvas, num):
@@ -443,8 +602,13 @@ class FigureManagerHTMLCanvas(FigureManagerBase):
 
 @_Backend.export
 class _BackendHTMLCanvas(_Backend):
-    FigureCanvas = FigureCanvasHTMLCanvas
-    FigureManager = FigureManagerHTMLCanvas
+    # FigureCanvas = FigureCanvasHTMLCanvas
+    # FigureManager = FigureManagerHTMLCanvas
+    # Note: with release 0.2.3, we've redirected the HTMLCanvas backend to use the WASM backend
+    # for now, as the changes to the HTMLCanvas backend are not yet fully functional.
+    # This will be updated in a future release.
+    FigureCanvas = FigureCanvasAggWasm
+    FigureManager = FigureManagerAggWasm
 
     @staticmethod
     def show(*args, **kwargs):

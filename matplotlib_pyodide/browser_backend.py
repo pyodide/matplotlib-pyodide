@@ -164,13 +164,15 @@ class FigureCanvasWasm(FigureCanvasBase):
         rubberband.setAttribute("tabindex", "0")
         # Event handlers are added to the canvas "on top", even though most of
         # the activity happens in the canvas below.
-        add_event_listener(rubberband, "mousemove", self.onmousemove)
-        add_event_listener(rubberband, "mouseup", self.onmouseup)
-        add_event_listener(rubberband, "mousedown", self.onmousedown)
-        add_event_listener(rubberband, "mouseenter", self.onmouseenter)
-        add_event_listener(rubberband, "mouseleave", self.onmouseleave)
-        add_event_listener(rubberband, "keyup", self.onkeyup)
-        add_event_listener(rubberband, "keydown", self.onkeydown)
+        # TODO: with 0.2.3, we temporarily disable event listeners for the rubberband canvas.
+        # This shall be revisited in a future release.
+        # add_event_listener(rubberband, "mousemove", self.onmousemove)
+        # add_event_listener(rubberband, "mouseup", self.onmouseup)
+        # add_event_listener(rubberband, "mousedown", self.onmousedown)
+        # add_event_listener(rubberband, "mouseenter", self.onmouseenter)
+        # add_event_listener(rubberband, "mouseleave", self.onmouseleave)
+        # add_event_listener(rubberband, "keyup", self.onkeyup)
+        # add_event_listener(rubberband, "keydown", self.onkeydown)
         context = rubberband.getContext("2d")
         context.strokeStyle = "#000000"
         context.setLineDash([2, 2])
@@ -180,8 +182,13 @@ class FigureCanvasWasm(FigureCanvasBase):
 
         # The bottom bar, with toolbar and message display
         bottom = document.createElement("div")
-        toolbar = self.toolbar.get_element()
-        bottom.appendChild(toolbar)
+
+        # Check if toolbar exists before trying to get its element
+        # c.f. https://github.com/pyodide/pyodide/pull/4510
+        if self.toolbar is not None:
+            toolbar = self.toolbar.get_element()
+            bottom.appendChild(toolbar)
+
         message = document.createElement("div")
         message.id = self._id + "message"
         message.setAttribute("style", "min-height: 1.5em")
