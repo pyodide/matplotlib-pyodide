@@ -19,9 +19,8 @@ def matplotlib_test_decorator(f):
 @pytest.fixture(scope="module")
 def wheel_path(tmp_path_factory):
     # Build a micropip wheel for testing
-    from build.env import DefaultIsolatedEnv
-
     import build
+    from build.env import DefaultIsolatedEnv
 
     output_dir = tmp_path_factory.mktemp("wheel")
 
