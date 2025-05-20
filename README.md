@@ -1,3 +1,13 @@
+## DISCLAIMER
+
+This project is no longer used in Pyodide as of Pyodide v0.28 (see [issue#65](https://github.com/pyodide/matplotlib-pyodide/issues/65#issuecomment-2532463697)).
+We don't accept any new features or bug fixes. The project is archived and will not be maintained anymore.
+
+The default matplotlib backend for Pyodide is now the patched version of `webagg` backend. If you were using `matplotlib_pyodide` in your code,
+simply removing the `matplotlib.use('module://matplotlib_pyodide...')` line should be enough to make your code work with the new backend.
+
+If it doesn't, try replacing it with `matplotlib.use('webagg')`.
+
 # matplotlib-pyodide
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/matplotlib-pyodide.svg)](https://pypi.org/project/matplotlib-pyodide/)
